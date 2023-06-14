@@ -26,7 +26,7 @@ async def send_message(message: str) -> AsyncIterable[str]:
     callback = AsyncIteratorCallbackHandler()
 
     conversation_chain = ConversationChain(
-        llm=OpenAI(streaming=True, callbacks=[callback], model=gpt-4),
+        llm=OpenAI(streaming=True, callbacks=[callback]),
         memory=memory,
     )
 
