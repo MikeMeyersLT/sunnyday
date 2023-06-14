@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationSummaryBufferMemory
 from langchain.llms import OpenAI
+from langchain.chat_models import ChatOpenAI
 from pydantic import BaseModel
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable, Awaitable
@@ -15,7 +16,8 @@ app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=[
                    "*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
-memory=ConversationSummaryBufferMemory(llm=OpenAI())
+memory = ConversationSummaryBufferMemory(llm=OpenAI())
+
 
 class Message(BaseModel):
     message: str
@@ -26,7 +28,8 @@ async def send_message(message: str) -> AsyncIterable[str]:
     callback = AsyncIteratorCallbackHandler()
 
     conversation_chain = ConversationChain(
-        llm=OpenAI(streaming=True, callbacks=[callback]),
+        llm=ChatOpenAI(streaming=True, callbacks=[
+                       callback], model="gpt-4", max_tokens=8000),
         memory=memory,
     )
 
@@ -61,6 +64,6 @@ async def memory_clear():
 async def get_answer(message: Message):
     return StreamingResponse(send_message(message.message), media_type='text/event-stream')
 
-if __name__ == "__main__":
+if name == "main":
     import uvicorn
     uvicorn.run(host="0.0.0.0", port=8080, app=app)
