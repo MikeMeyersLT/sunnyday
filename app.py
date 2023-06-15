@@ -1,22 +1,37 @@
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from langchain.chains import ConversationChain
-from langchain.memory import ConversationSummaryBufferMemory
-from langchain.llms import OpenAI
-from langchain.chat_models import ChatOpenAI
 from pydantic import BaseModel
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable, Awaitable
 from fastapi.responses import StreamingResponse
 import asyncio
+import openai
+import os
 
 load_dotenv()
+
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=[
                    "*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
-memory = ConversationSummaryBufferMemory(llm=OpenAI())
+messages = []
+instructor = """You're a assistant helping humans. Please answer questions as detail as possible.
+                And please format them in a user-friendly way, easy to read.
+                Use \n for line break so we can get answers by paragraph.
+                For example: This is paragraph1.\nThis is pargraph2.
+            """
+remember_cnt = 10
+
+
+def initializeMemory():
+    global messages
+    messages = []
+
+
+initializeMemory()
 
 
 class Message(BaseModel):
@@ -25,40 +40,32 @@ class Message(BaseModel):
 
 async def send_message(message: str) -> AsyncIterable[str]:
 
-    callback = AsyncIteratorCallbackHandler()
-
-    conversation_chain = ConversationChain(
-        llm=ChatOpenAI(streaming=True, callbacks=[
-                       callback], model="gpt-4", max_tokens=8000),
-        memory=memory,
+    messages.append({'role': 'user', 'content': message})
+    response = openai.ChatCompletion.create(
+        model='gpt-4',
+        messages=[{'role': 'system', 'content': instructor}] +
+        messages[-remember_cnt:],
+        temperature=0,
+        stream=True
     )
 
-    async def wrap_done(fn: Awaitable, event: asyncio.Event):
-        try:
-            await fn
-        except Exception as e:
-            print(f"Caught exception: {e}")
-        finally:
-            event.set()
+    final = ""
+    for chunk in response:
+        if 'content' in chunk.choices[0].delta:
+            string = chunk.choices[0].delta.content
+            final += string
+            if string.isspace() and len(string.strip()) == 0:
+                yield '\n'
+            else:
+                yield string
 
-    task = asyncio.create_task(wrap_done(
-        conversation_chain.apredict(input=message),
-        callback.done
-    ))
-
-    data = ""
-    async for token in callback.aiter():
-        data += token
-        print(repr(f"data:{token}"))
-        yield f"{token}"
-
-    await task
+    print(final)
+    messages.append({'role': 'assistant', 'content': final})
 
 
 @app.post("/memory-clear")
 async def memory_clear():
-    memory.clear()
-
+    initializeMemory()
 
 @app.post("/chat")
 async def get_answer(message: Message):
