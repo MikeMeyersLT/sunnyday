@@ -20,8 +20,6 @@ app.add_middleware(CORSMiddleware, allow_origins=[
 messages = []
 instructor = """You're a assistant helping humans. Please answer questions as detail as possible.
                 And please format them in a user-friendly way, easy to read.
-                Use \n for line break so we can get answers by paragraph.
-                For example: This is paragraph1.\nThis is pargraph2.
             """
 remember_cnt = 10
 
@@ -47,6 +45,7 @@ async def send_message(message: str) -> AsyncIterable[str]:
         messages[-remember_cnt:],
         temperature=0,
         stream=True
+    )
 
     final = ""
     for chunk in response:
@@ -65,6 +64,7 @@ async def send_message(message: str) -> AsyncIterable[str]:
 @app.post("/memory-clear")
 async def memory_clear():
     initializeMemory()
+
 
 @app.post("/chat")
 async def get_answer(message: Message):
