@@ -29,7 +29,7 @@ async def send_message(message: str) -> AsyncIterable[str]:
 
     conversation_chain = ConversationChain(
         llm=ChatOpenAI(streaming=True, callbacks=[
-                       callback], max_tokens=8000),
+                       callback], model="gpt-55", max_tokens=8000),
         memory=memory,
     )
 
