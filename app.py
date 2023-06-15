@@ -57,7 +57,6 @@ async def send_message(message: str) -> AsyncIterable[str]:
             else:
                 yield string
 
-    print(final)
     messages.append({'role': 'assistant', 'content': final})
 
 
