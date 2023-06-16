@@ -5,7 +5,6 @@ from pydantic import BaseModel
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable, Awaitable
 from fastapi.responses import StreamingResponse
-import asyncio
 import openai
 import os
 
@@ -18,8 +17,10 @@ app.add_middleware(CORSMiddleware, allow_origins=[
                    "*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 messages = []
-instructor = """You're a assistant helping humans. Please answer questions as detail as possible.
+subject = "wine"
+instructor = f"""You're a assistant helping humans. Please answer questions as detail as possible.
                 And please format them in a user-friendly way, easy to read.
+                If human's asking about something that is not related with ${subject}, just tell him you only answer about ${subject}.
             """
 remember_cnt = 10
 
