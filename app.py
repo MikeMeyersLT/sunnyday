@@ -7,6 +7,7 @@ from typing import AsyncIterable, Awaitable
 from fastapi.responses import StreamingResponse
 import openai
 import os
+import uuid
 
 load_dotenv()
 
@@ -16,7 +17,7 @@ app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=[
                    "*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
-messages = []
+messages = {}
 subject = "wine"
 instructor = f"""You're a assistant helping humans. Please answer questions as detail as possible.
                 And please format them in a user-friendly way, easy to read.
@@ -25,25 +26,29 @@ instructor = f"""You're a assistant helping humans. Please answer questions as d
 remember_cnt = 10
 
 
-def initializeMemory():
+def initializeMemory(token: str):
     global messages
-    messages = []
-
-
-initializeMemory()
+    messages[token] = []
 
 
 class Message(BaseModel):
     message: str
+    token: str
 
 
-async def send_message(message: str) -> AsyncIterable[str]:
+class Token(BaseModel):
+    token: str
 
-    messages.append({'role': 'user', 'content': message})
+
+async def send_message(message: str, token: str) -> AsyncIterable[str]:
+
+    if (token not in messages):
+        messages[token] = []
+    messages[token].append({'role': 'user', 'content': message})
     response = openai.ChatCompletion.create(
         model='gpt-4',
         messages=[{'role': 'system', 'content': instructor}] +
-        messages[-remember_cnt:],
+        messages[token][-remember_cnt:],
         temperature=0,
         stream=True
     )
@@ -58,17 +63,22 @@ async def send_message(message: str) -> AsyncIterable[str]:
             else:
                 yield string
 
-    messages.append({'role': 'assistant', 'content': final})
+    messages[token].append({'role': 'assistant', 'content': final})
 
 
 @app.post("/memory-clear")
-async def memory_clear():
-    initializeMemory()
+async def memory_clear(token: Token):
+    if (token.token != ""):
+        initializeMemory(token.token)
+    if (token.token == ""):
+        return uuid.uuid4()
+    else:
+        return ""
 
 
 @app.post("/chat")
 async def get_answer(message: Message):
-    return StreamingResponse(send_message(message.message), media_type='text/event-stream')
+    return StreamingResponse(send_message(message.message, message.token), media_type='text/event-stream')
 
 if __name__ == "__main__":
     import uvicorn
