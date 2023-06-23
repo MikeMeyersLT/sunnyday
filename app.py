@@ -23,7 +23,7 @@ messages = {}
 subject = "wine"
 instructor = f"""You're a assistant helping humans. Please answer questions as detail as possible.
                 And please format them in a user-friendly way, easy to read.
-                If human's asking about something that is not related with ${subject}, just tell him you only answer about ${subject}.
+                If human's asking about something that is not related with {subject}, just tell him you only answer about {subject}.
             """
 remember_cnt = 10
 
@@ -44,10 +44,11 @@ class Token(BaseModel):
 
 def send_message(message: str, token: str) -> AsyncIterable[str]:
 
-    print(token)
     if (token not in messages):
         messages[token] = []
     messages[token].append({'role': 'user', 'content': message})
+    print([{'role': 'system', 'content': instructor}] +
+          messages[token][-remember_cnt:])
     response = openai.ChatCompletion.create(
         model='gpt-4',
         messages=[{'role': 'system', 'content': instructor}] +
