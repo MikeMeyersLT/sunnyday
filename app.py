@@ -47,8 +47,7 @@ def send_message(message: str, token: str) -> AsyncIterable[str]:
     if (token not in messages):
         messages[token] = []
     messages[token].append({'role': 'user', 'content': message})
-    print([{'role': 'system', 'content': instructor}] +
-          messages[token][-remember_cnt:])
+    print(messages[token])
     response = openai.ChatCompletion.create(
         model='gpt-4',
         messages=[{'role': 'system', 'content': instructor}] +
