@@ -8,6 +8,8 @@ from fastapi.responses import StreamingResponse
 import openai
 import os
 import uuid
+import asyncio
+import time
 
 load_dotenv()
 
@@ -40,8 +42,9 @@ class Token(BaseModel):
     token: str
 
 
-async def send_message(message: str, token: str) -> AsyncIterable[str]:
+def send_message(message: str, token: str) -> AsyncIterable[str]:
 
+    print(token)
     if (token not in messages):
         messages[token] = []
     messages[token].append({'role': 'user', 'content': message})
