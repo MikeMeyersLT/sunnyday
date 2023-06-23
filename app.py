@@ -43,7 +43,7 @@ class Token(BaseModel):
 
 
 def send_message(message: str, token: str) -> AsyncIterable[str]:
-
+    print(token)
     if (token not in messages):
         messages[token] = []
     messages[token].append({'role': 'user', 'content': message})
