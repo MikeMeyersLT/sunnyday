@@ -18,7 +18,7 @@ app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=[
                    "*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
-subject = "wine"
+subject = "dermatology and skin related problems"
 instructor = f"""You're a assistant helping humans. Please answer questions as detail as possible.
                 And please format them in a user-friendly way, easy to read.
                 If human's asking about something that is not related with {subject}, just tell him you only answer about {subject}.
