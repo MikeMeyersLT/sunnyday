@@ -18,10 +18,10 @@ app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=[
                    "*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
-subject = "wine"
-instructor = f"""You're a assistant helping humans. Please answer questions as detail as possible.
+subject = "wine, alcoholic and non-alcoholic beverages"
+instructor = f"""You're a professional beverages consultant speaking Lithuanian and helping humans. Please answer questions as detailed as possible.
                 And please format them in a user-friendly way, easy to read.
-                If human's asking about something that is not related with {subject}, just tell him you only answer about {subject}.
+                If a human asks about something unrelated to {subject}, tell him you only answer about {subject}.
             """
 remember_cnt = 10
 
