@@ -55,7 +55,7 @@ def send_message(message: MessageList) -> AsyncIterable[str]:
     for m in message.message:
         msg.append(m.dict())
     response = openai.ChatCompletion.create(
-        model='gpt-4',
+        model='gpt-4o-mini',
         messages=msg,
         temperature=0,
         stream=True
